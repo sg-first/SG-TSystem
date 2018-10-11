@@ -9,18 +9,20 @@ enum tType{_BasicType,_IntersectionType,_UnionType};
 class Type
 {
 protected:
-    int typeType;
     string label;
-    bool baseEqu(Type &t);
+    bool baseEqu(Type* t) const;
 public:
-    Type(int typeType):typeType(typeType){}
+    Type(){}
+    Type(const Type& t):label(t.getLabel()){}
+    virtual ~Type(){}
     //相等为类型严格相等
     //合法（的值）为互赋值能否接受
-    virtual bool isLegal(const Type&) {return true;}
+    virtual bool isLegal(Type*)=0;
+    virtual bool isEqu(Type* t)=0;
+    virtual int getTypeType() const =0;
 
-    int getTypeType() {return this->typeType;}
     void setLabel(string label) {this->label=label;}
-    string getLabel() {return this->label;}
+    string getLabel() const {return this->label;}
 };
 
 
@@ -29,32 +31,44 @@ class BasicType : public Type
 protected:
     int basicType;
 public:
-    BasicType(int basicType):Type(_BasicType),basicType(basicType){}
-    virtual bool isLegal(Type &t); //对于基本类型，合法即相等
+    BasicType(int basicType):basicType(basicType){}
+    BasicType(const BasicType& t):Type(t),basicType(t.getBasicType()){}
+    virtual bool isLegal(Type* t);
+    virtual bool isEqu(Type* t) {return this->isLegal(t);}  //对于基本类型，合法即相等
+    virtual getTypeType() const {return _BasicType;}
 
-    int getBasicType() {return this->basicType;}
+    int getBasicType() const {return this->basicType;}
 };
 
 
 class IntersectionType : public Type
 {
 protected:
-    vector<Type>allType;
+    vector<Type*>allType;
 public:
-    IntersectionType():Type(_IntersectionType){}
-    virtual bool isLegal(Type &t); //对于交叉类型，合法即相等
+    IntersectionType(){}
+    IntersectionType(const IntersectionType& t);
+    virtual ~IntersectionType();
+    virtual bool isLegal(Type *t);
+    virtual bool isEqu(Type* t) {return this->isLegal(t);}  //对于交叉类型，合法即相等
+    virtual getTypeType() const {return _IntersectionType;}
 
-    void addType(Type t) {this->allType.push_back(t);}
+    void addType(Type* t); //拷贝之后再添加，持有所有权
 };
 
 
 class UnionType : public Type
 {
 protected:
-    vector<Type>allType;
+    vector<Type*>allType;
 public:
-    UnionType():Type(_UnionType){}
-    virtual bool isLegal(Type &t); //对于联合类型，相等为合法的一种情形
+    UnionType(){}
+    UnionType(const UnionType& t);
+    virtual ~UnionType();
+    virtual bool isLegal(Type* t); //对于联合类型，相等为合法的一种情形
+    virtual bool isEqu(Type *t);
 
-    void addType(Type t) {this->allType.push_back(t);}
+    virtual getTypeType() const {return _UnionType;}
+
+    void addType(Type* t); //拷贝之后再添加，持有所有权
 };
