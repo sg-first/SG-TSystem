@@ -8,6 +8,8 @@ Type* copyType(Type* t)
         return new IntersectionType(*dynamic_cast<IntersectionType*>(t));
     if(t->getTypeType()==_UnionType)
         return new UnionType(*dynamic_cast<UnionType*>(t));
+    if(t->getTypeType()==_MapType)
+        return new MapType(*dynamic_cast<MapType*>(t));
     return nullptr;
 }
 
@@ -33,4 +35,22 @@ UnionType::~UnionType()
 {
     for(Type* t:this->allType)
         delete t;
+}
+
+MapType::~MapType()
+{
+    delete this->image;
+    delete this->inverseImage;
+}
+
+MapType::MapType(Type *inverseImage, Type *image)
+{
+    this->image=copyType(inverseImage);
+    this->inverseImage=copyType(image);
+}
+
+MapType::MapType(const MapType &t):Type(t)
+{
+    this->image=copyType(t.image);
+    this->inverseImage=copyType(t.inverseImage);
 }

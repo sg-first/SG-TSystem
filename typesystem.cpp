@@ -40,13 +40,10 @@ bool UnionType::isLegal(Type *t)
         return true;
     else
     {
-        if(this->baseEqu(t))
+        for(Type* ti:this->allType)
         {
-            for(Type* ti:this->allType)
-            {
-                if(ti->isEqu(t))
-                    return true;
-            }
+            if(ti->isEqu(t))
+                return true;
         }
     }
     return false;
@@ -54,11 +51,27 @@ bool UnionType::isLegal(Type *t)
 
 bool UnionType::isEqu(Type *t)
 {
-    UnionType* pt=dynamic_cast<UnionType*>(t);
-    for(unsigned int i=0;i<this->allType.size();i++)
+    if(this->baseEqu(t))
     {
-        if(!this->allType.at(i)->isEqu(pt->allType.at(i)))
-            return false;
+        UnionType* pt=dynamic_cast<UnionType*>(t);
+        for(unsigned int i=0;i<this->allType.size();i++)
+        {
+            if(!this->allType.at(i)->isEqu(pt->allType.at(i)))
+                return false;
+        }
+        return true;
     }
-    return true;
+    return false;
+}
+
+
+bool MapType::isLegal(Type *t)
+{
+    if(this->baseEqu(t))
+    {
+        MapType* pt=dynamic_cast<MapType*>(t);
+        if(this->inverseImage->isEqu(pt->inverseImage)&&this->image->isEqu(pt->image))
+            return true;
+    }
+    return false;
 }

@@ -4,7 +4,7 @@
 using namespace std;
 
 enum bType{Num,String};
-enum tType{_BasicType,_IntersectionType,_UnionType};
+enum tType{_BasicType,_IntersectionType,_UnionType,_MapType};
 
 class Type
 {
@@ -65,10 +65,23 @@ public:
     UnionType(){}
     UnionType(const UnionType& t);
     virtual ~UnionType();
-    virtual bool isLegal(Type* t); //对于联合类型，相等为合法的一种情形
-    virtual bool isEqu(Type *t);
-
+    virtual bool isLegal(Type* t);
+    virtual bool isEqu(Type *t); //对于联合类型，相等为合法的一种情形
     virtual getTypeType() const {return _UnionType;}
 
     void addType(Type* t); //拷贝之后再添加，持有所有权
+};
+
+class MapType : public Type
+{
+protected:
+    Type* inverseImage;
+    Type* image;
+public:
+    MapType(Type* inverseImage,Type* image); //凡是用指针传递到成员的，全部复制，然后持有复制后对象的所有权
+    MapType(const MapType& t);
+    virtual ~MapType();
+    virtual bool isLegal(Type* t);
+    virtual bool isEqu(Type* t) {return this->isLegal(t);} //对于映射类型，合法即相等
+    virtual getTypeType() const {return _MapType;}
 };
