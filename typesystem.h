@@ -146,7 +146,7 @@ public:
     virtual bool isEquIgP(Type *t);
 
     CompositeType* specialization(vector<Type*>&parlist);
-    //parlist中不应再包含占位符。如果所有参数都有，返回特化后的rootT，否则仍然返回ParametrisedType
+    //parlist中不应再包含占位符（因为有遍历开销，这里就先不检查了）。如果所有参数都有，返回特化后的rootT，否则仍然返回ParametrisedType
 
     //为参数类型开的洞
     void reSetRootT(CompositeType* t);

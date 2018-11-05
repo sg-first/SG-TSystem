@@ -170,3 +170,13 @@ Type* MapType::calu(Type* t)
         throw string("Mismatch with inverseImage");
     return copyType(this->image);
 }
+
+void IntersectionType::addType(Type *t)
+{
+    this->allType.push_back(copyType(t));
+}
+
+void UnionType::addType(Type *t)
+{
+    this->allType.push_back(copyType(t));
+}
