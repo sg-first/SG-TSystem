@@ -13,13 +13,13 @@ Type* copyType(Type* t)
     return nullptr;
 }
 
-IntersectionType::IntersectionType(const IntersectionType &t):Type(t)
+IntersectionType::IntersectionType(const IntersectionType &t):CompositeType(t)
 {
     for(Type* t:this->allType)
         this->allType.push_back(copyType(t));
 }
 
-UnionType::UnionType(const UnionType &t):Type(t)
+UnionType::UnionType(const UnionType &t):CompositeType(t)
 {
     for(Type* t:this->allType)
         this->allType.push_back(copyType(t));
@@ -49,8 +49,20 @@ MapType::MapType(Type *inverseImage, Type *image)
     this->inverseImage=copyType(image);
 }
 
-MapType::MapType(const MapType &t):Type(t)
+MapType::MapType(const MapType &t):CompositeType(t)
 {
     this->image=copyType(t.image);
     this->inverseImage=copyType(t.inverseImage);
+}
+
+ParametrisedType::ParametrisedType(CompositeType *rootT)
+{
+    this->rootT=dynamic_cast<CompositeType*>(copyType(rootT));
+    this->parnum=rootT->getParNum();
+}
+
+ParametrisedType::ParametrisedType(const ParametrisedType &t)
+{
+    this->rootT=dynamic_cast<CompositeType*>(copyType(t.rootT));
+    this->parnum=t.parnum;
 }
