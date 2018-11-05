@@ -4,7 +4,7 @@
 using namespace std;
 
 enum bType{Num,String,Null,Void};
-enum tType{_BasicType,_IntersectionType,_UnionType,_MapType,_Placeholder,_parametrisedType};
+enum tType{_BasicType,_IntersectionType,_UnionType,_MapType,_Placeholder,_ParametrisedType};
 
 class Type
 {
@@ -75,6 +75,10 @@ public:
     virtual int getTypeType() const {return _IntersectionType;}
 
     void addType(Type* t); //拷贝之后再添加，持有所有权
+    //为参数类型开的洞
+    void reSetElm(unsigned int sub,Type* t);
+    bool isParametrise(unsigned int sub) {return this->allType[sub]->getTypeType()==_Placeholder;}
+    unsigned int getSize() {return this->allType.size();}
 };
 
 
@@ -93,6 +97,10 @@ public:
     virtual getTypeType() const {return _UnionType;}
 
     void addType(Type* t); //拷贝之后再添加，持有所有权
+    //为参数类型开的洞
+    void reSetElm(unsigned int sub,Type* t);
+    bool isParametrise(unsigned int sub) {return this->allType[sub]->getTypeType()==_Placeholder;}
+    unsigned int getSize() {return this->allType.size();}
 };
 
 
@@ -110,6 +118,12 @@ public:
     virtual bool isEquIgP(Type *t);
     virtual unsigned int getParNum();
     virtual int getTypeType() const {return _MapType;}
+
+    //为参数类型开的洞
+    void reSetImage(Type* t);
+    void reSetInverseImage(Type* t);
+    bool isImageParametrise() {return this->image->getTypeType()==_Placeholder;}
+    bool isInverseImageParametrise() {return this->inverseImage->getTypeType()==_Placeholder;}
 };
 
 
@@ -125,7 +139,14 @@ public:
     virtual bool isLegal(Type* t) {return this->isEqu(t);}
     //因为ParametrisedType没有“值”，所以也不存在值的类型（特化产生的那个不是一回事）。所以这里Legal暂且和Equ一样
     virtual bool isEqu(Type* t); //相等即严格相等
-    virtual int getTypeType() const {return _parametrisedType;}
+    virtual int getTypeType() const {return _ParametrisedType;}
     virtual unsigned int getParNum() {return (rootT->getTypeType()==_Placeholder)?1:0;}
     virtual bool isEquIgP(Type *t);
+
+    CompositeType* specialization(vector<Type*>&parlist);
+    //parlist中不应再包含占位符。如果所有参数都有，返回特化后的rootT，否则仍然返回ParametrisedType
+
+    //为参数类型开的洞
+    void reSetRootT(CompositeType* t);
+    bool isRootTParametrise() {return this->rootT->getTypeType()==_Placeholder;}
 };
