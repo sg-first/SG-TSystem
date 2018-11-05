@@ -163,3 +163,10 @@ CompositeType* ParametrisedType::specialization(vector<Type*>&parlist)
         return relresultType;
     }
 }
+
+Type* MapType::calu(Type* t)
+{
+    if(!this->inverseImage->isEqu(t))
+        throw string("Mismatch with inverseImage");
+    return copyType(this->image);
+}

@@ -119,6 +119,8 @@ public:
     virtual unsigned int getParNum();
     virtual int getTypeType() const {return _MapType;}
 
+    Type* calu(Type* t);
+
     //为参数类型开的洞
     void reSetImage(Type* t);
     void reSetInverseImage(Type* t);
