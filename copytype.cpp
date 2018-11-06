@@ -10,16 +10,20 @@ Type* copyType(Type* t)
         return new UnionType(*dynamic_cast<UnionType*>(t));
     if(t->getTypeType()==_MapType)
         return new MapType(*dynamic_cast<MapType*>(t));
+    if(t->getTypeType()==_ParametrisedType)
+        return new ParametrisedType(*dynamic_cast<ParametrisedType*>(t));
+    if(t->getTypeType()==_Placeholder)
+        return new Placeholder(*dynamic_cast<Placeholder*>(t));
     return nullptr;
 }
 
-IntersectionType::IntersectionType(const IntersectionType &t):CompositeType(t)
+IntersectionType::IntersectionType(const IntersectionType &t):StructuredType(t)
 {
     for(Type* t:this->allType)
         this->allType.push_back(copyType(t));
 }
 
-UnionType::UnionType(const UnionType &t):CompositeType(t)
+UnionType::UnionType(const UnionType &t):StructuredType(t)
 {
     for(Type* t:this->allType)
         this->allType.push_back(copyType(t));
@@ -49,21 +53,21 @@ MapType::MapType(Type *inverseImage, Type *image)
     this->inverseImage=copyType(image);
 }
 
-MapType::MapType(const MapType &t):CompositeType(t)
+MapType::MapType(const MapType &t):StructuredType(t)
 {
     this->image=copyType(t.image);
     this->inverseImage=copyType(t.inverseImage);
 }
 
-ParametrisedType::ParametrisedType(CompositeType *rootT)
+ParametrisedType::ParametrisedType(StructuredType *rootT)
 {
-    this->rootT=dynamic_cast<CompositeType*>(copyType(rootT));
+    this->rootT=dynamic_cast<StructuredType*>(copyType(rootT));
     this->parnum=rootT->getParNum();
 }
 
 ParametrisedType::ParametrisedType(const ParametrisedType &t)
 {
-    this->rootT=dynamic_cast<CompositeType*>(copyType(t.rootT));
+    this->rootT=dynamic_cast<StructuredType*>(copyType(t.rootT));
     this->parnum=t.parnum;
 }
 
@@ -91,21 +95,21 @@ void MapType::reSetInverseImage(Type *t)
     this->inverseImage=copyType(t);
 }
 
-void ParametrisedType::reSetRootT(CompositeType* t)
+void ParametrisedType::reSetRootT(StructuredType* t)
 {
     delete this->rootT;
-    this->rootT=dynamic_cast<CompositeType*>(copyType(t));
+    this->rootT=dynamic_cast<StructuredType*>(copyType(t));
 }
 
-CompositeType* ParametrisedType::specialization(vector<Type*>&parlist)
+StructuredType* ParametrisedType::specialization(vector<Type*>&parlist)
 {
     if(parlist.size()>this->parnum)
         throw string("Too many parameters");
 
-    CompositeType* resultType=dynamic_cast<CompositeType*>(copyType(this->rootT)); //返回复制的
+    StructuredType* resultType=dynamic_cast<StructuredType*>(copyType(this->rootT)); //返回复制的
     unsigned int nowsub=0; //最后结果是特化数目
 
-    //warn:如果添加新的复合类型这里要进行添加
+    //warn:如果添加新的构造类型这里要进行添加
     if(this->rootT->getTypeType()==_UnionType)
     {
         UnionType* pt=dynamic_cast<UnionType*>(resultType);
@@ -149,7 +153,7 @@ CompositeType* ParametrisedType::specialization(vector<Type*>&parlist)
         ParametrisedType* pt=dynamic_cast<ParametrisedType*>(resultType);
         if(pt->isRootTParametrise())
         {
-            pt->reSetRootT(dynamic_cast<CompositeType*>(parlist.at(nowsub))); //此处开发者有责任进行保障
+            pt->reSetRootT(dynamic_cast<StructuredType*>(parlist.at(nowsub))); //此处开发者有责任进行保障
             nowsub++;
         }
     }

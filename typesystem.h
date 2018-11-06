@@ -10,11 +10,11 @@ class Type
 {
 protected:
     string label;
-    bool baseEqu(Type* t) const;
 public:
     Type(){}
     Type(const Type& t):label(t.getLabel()){}
     virtual ~Type(){}
+    bool baseEqu(Type* t) const;
     //相等为类型严格相等
     //合法（的值）为互赋值能否接受
     virtual bool isLegal(Type*)=0;
@@ -30,9 +30,10 @@ public:
 class Placeholder : public Type //只有复合类型才有空插占位符，别的不行
 {
 public:
+    Placeholder(const Placeholder& t):Type(t){}
     virtual bool isLegal(Type*) {return true;}
     virtual bool isEqu(Type*) {return true;}
-    virtual int getTypeType() {return _Placeholder;}
+    virtual int getTypeType() const {return _Placeholder;}
 };
 
 
@@ -51,7 +52,7 @@ public:
 };
 
 
-class CompositeType : public Type
+class StructuredType : public Type
 {
 public:
     virtual bool isCompositeType() {return true;}
@@ -60,7 +61,7 @@ public:
 };
 
 
-class IntersectionType : public CompositeType
+class IntersectionType : public StructuredType
 {
 protected:
     vector<Type*>allType;
@@ -69,7 +70,7 @@ public:
     IntersectionType(const IntersectionType& t);
     virtual ~IntersectionType();
     virtual bool isLegal(Type *t);
-    virtual bool isEqu(Type* t) {return this->isLegal(t);}  //对于交叉类型，合法即相等
+    virtual bool isEqu(Type* t);  //对于交叉类型，合法与相等逻辑相同
     virtual bool isEquIgP(Type *t);
     virtual unsigned int getParNum();
     virtual int getTypeType() const {return _IntersectionType;}
@@ -82,7 +83,7 @@ public:
 };
 
 
-class UnionType : public CompositeType
+class UnionType : public StructuredType
 {
 protected:
     vector<Type*>allType;
@@ -104,7 +105,7 @@ public:
 };
 
 
-class MapType : public CompositeType
+class MapType : public StructuredType
 {
 protected:
     Type* inverseImage;
@@ -114,7 +115,7 @@ public:
     MapType(const MapType& t);
     virtual ~MapType();
     virtual bool isLegal(Type* t);
-    virtual bool isEqu(Type* t) {return this->isLegal(t);} //对于映射类型，合法即相等
+    virtual bool isEqu(Type* t);
     virtual bool isEquIgP(Type *t);
     virtual unsigned int getParNum();
     virtual int getTypeType() const {return _MapType;}
@@ -129,26 +130,26 @@ public:
 };
 
 
-class ParametrisedType : public CompositeType
+class ParametrisedType : public StructuredType //所有含有占位符的类型都应该被本类包装
 {
 protected:
-    CompositeType* rootT;
+    StructuredType* rootT;
     unsigned int parnum;
 public:
-    ParametrisedType(CompositeType *rootT);
+    ParametrisedType(StructuredType *rootT);
     ParametrisedType(const ParametrisedType& t);
     virtual ~ParametrisedType() {delete this->rootT;}
-    virtual bool isLegal(Type* t) {return this->isEqu(t);}
-    //因为ParametrisedType没有“值”，所以也不存在值的类型（特化产生的那个不是一回事）。所以这里Legal暂且和Equ一样
+    virtual bool isLegal(Type* t);
+    //这个isLegal的思想——特化产生的类型看作ParametrisedType的“值”。因此与相等及不充分也不必要
     virtual bool isEqu(Type* t); //相等即严格相等
     virtual int getTypeType() const {return _ParametrisedType;}
     virtual unsigned int getParNum() {return (rootT->getTypeType()==_Placeholder)?1:0;}
     virtual bool isEquIgP(Type *t);
 
-    CompositeType* specialization(vector<Type*>&parlist);
+    StructuredType* specialization(vector<Type*>&parlist);
     //parlist中不应再包含占位符（因为有遍历开销，这里就先不检查了）。如果所有参数都有，返回特化后的rootT，否则仍然返回ParametrisedType
 
     //为参数类型开的洞
-    void reSetRootT(CompositeType* t);
+    void reSetRootT(StructuredType* t);
     bool isRootTParametrise() {return this->rootT->getTypeType()==_Placeholder;}
 };
